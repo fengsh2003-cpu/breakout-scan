@@ -1,0 +1,49 @@
+name: refresh breakout scan
+
+on:
+  schedule:
+    # 台北時間平日 14:30（UTC 06:30）— 台股 13:30 收盤後約 1 小時，
+    # 官方每日收盤行情通常已更新。GitHub 的排程可能延遲數十分鐘，屬正常。
+    - cron: "30 6 * * 1-5"
+    # 保險第二班：台北時間 17:00（UTC 09:00），補抓 14:30 時尚未更新的情況
+    - cron: "0 9 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # breakout_scan.py 只用標準庫，故不需 pip install 任何套件
+      - name: 抓取近日全市場行情（已快取者自動略過）
+        run: python breakout_scan.py backfill 12
+
+      - name: 重新掃描並輸出
+        run: python breakout_scan.py export
+
+      - name: 刪除過舊的日快取，避免 repo 無限膨脹
+        run: python breakout_scan.py prune 70
+
+      - name: 有變動才 commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "資料無變動，略過 commit"
+            exit 0
+          fi
+          git add -A
+          git commit -m "chore: refresh breakout scan ($(date -u +%Y-%m-%dT%H:%MZ))"
+          git push

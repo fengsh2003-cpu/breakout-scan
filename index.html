@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>出量突破掃描</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0f7b5f">
+<style>
+  :root {
+    --brand: #0f7b5f;
+    --brand-dark: #0a5943;
+    --page-bg: #e8efe9;
+    --card-bg: #ffffff;
+    --text: #1d2b26;
+    --text-dim: #6c7d77;
+    --red: #d92d20;
+    --green: #067647;
+    --blue: #175cd3;
+    --border: #dfe8e2;
+    --chip: #f2f6f3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0 0 40px;
+    font-family: -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: var(--page-bg); color: var(--text);
+  }
+  header {
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    color: #fff; padding: 16px 16px 18px; position: sticky; top: 0; z-index: 5;
+  }
+  header h1 { margin: 0 0 3px; font-size: 1.1rem; }
+  header .meta { font-size: 0.72rem; opacity: 0.88; line-height: 1.5; }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 12px; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .bar input, .bar select {
+    padding: 9px 11px; border-radius: 9px; border: 1px solid var(--border);
+    font-size: 0.9rem; background: #fff; color: var(--text);
+  }
+  .bar input { flex: 1; min-width: 130px; }
+  .count { font-size: 0.78rem; color: var(--text-dim); }
+
+  .card {
+    background: var(--card-bg); border-radius: 14px; padding: 14px;
+    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .card h2 {
+    margin: 0 0 4px; font-size: 1.05rem; display: flex; align-items: baseline;
+    gap: 6px; flex-wrap: wrap;
+  }
+  .arrow { color: var(--red); }
+  .tags { font-size: 0.68rem; color: var(--text-dim); margin-bottom: 10px; }
+  .tag {
+    display: inline-block; background: var(--chip); border-radius: 5px;
+    padding: 2px 6px; margin-right: 4px;
+  }
+  .sec { border-radius: 10px; padding: 9px 11px; margin-bottom: 8px; }
+  .sec.quote { background: #fdf2f2; }
+  .sec.play  { background: #f1f6fd; }
+  .sec.vol   { background: #f2f7f3; }
+  .sec h3 { margin: 0 0 6px; font-size: 0.78rem; color: var(--text-dim); font-weight: 600; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
+  .row .k { font-size: 0.8rem; color: var(--text-dim); }
+  .row .v { font-size: 0.92rem; font-weight: 600; }
+  .v.big { font-size: 1.5rem; color: var(--red); }
+  .v.red { color: var(--red); } .v.green { color: var(--green); } .v.blue { color: var(--blue); }
+  .note { font-size: 0.68rem; color: var(--text-dim); margin-top: 5px; line-height: 1.5; }
+
+  details.info { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  details.info summary { cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+  details.info p, details.info li { font-size: 0.76rem; color: var(--text-dim); line-height: 1.65; }
+  details.info code { background: var(--chip); padding: 1px 4px; border-radius: 4px; }
+  .warn { border-left: 3px solid #d97706; padding-left: 9px; }
+  footer { text-align: center; font-size: 0.68rem; color: var(--text-dim); padding: 16px; line-height: 1.7; }
+  .empty { text-align: center; color: var(--text-dim); padding: 36px 12px; font-size: 0.88rem; }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page-bg: #101613; --card-bg: #18211d; --text: #e6ede9; --text-dim: #93a49c;
+      --border: #2a3630; --chip: #212c27; --red: #ff6b63; --green: #4ade80; --blue: #7aa7ff;
+    }
+    .sec.quote { background: #24191a; } .sec.play { background: #171f2b; } .sec.vol { background: #182219; }
+    details.info { background: var(--card-bg); }
+    .bar input, .bar select { background: var(--card-bg); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>⬆️ 出量突破掃描</h1>
+  <div class="meta" id="meta">載入中…</div>
+</header>
+
+<div class="wrap">
+  <details class="info">
+    <summary>這是什麼？規則與限制（務必先讀）</summary>
+    <p class="warn"><b>日終資料，非盤中即時。</b>訊號在收盤後才成立，最快隔日開盤才能進場。
+      本工具<b>沒有</b>逐筆成交明細（tick），因此<b>不提供</b>「25張大單買超」「買賣成交比」
+      「大單區間」這類欄位——那需要券商 API。本工具不重製任何第三方服務的私有演算法。</p>
+    <p><b>命中條件（全部須同時成立）：</b></p>
+    <ul id="rules"></ul>
+    <p><b>價位計算依據：</b>突破確認線 = 前 20 日最高收盤；箱高 = 突破確認線 − 前 20 日最低價；
+      防守 = 突破確認線 − 0.5×ATR(14)；目標1 = 突破確認線 + 0.5×箱高；目標2 = 突破確認線 + 1×箱高
+      （量測滿足點）。R/R =（下一個仍在進場價上方的目標 − 進場價）÷（進場價 − 防守價）。</p>
+    <p><b>誠實揭露：</b>上述門檻為初始設定值，<b>尚未經回測校準</b>，不等於已驗證的勝率。
+      漲停鎖死的個股收盤常已越過目標1，其「追價 R/R」會很差——那是真實資訊，不是計算錯誤。</p>
+    <p>資料源：TWSE <code>MI_INDEX</code>、TPEx <code>afterTrading/otc</code>（皆為官方公開端點）。</p>
+  </details>
+
+  <div class="bar">
+    <input id="q" type="search" placeholder="搜尋代號 / 名稱 / 產業">
+    <select id="sort">
+      <option value="vol_ratio">依量能倍數</option>
+      <option value="change_pct">依漲幅</option>
+      <option value="rr_pullback">依回測 R/R</option>
+      <option value="amount_yi">依成交金額</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<footer id="foot"></footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let DATA = null;
+
+const fmt = (n, d = 2) =>
+  (n === null || n === undefined || Number.isNaN(n)) ? "—" : Number(n).toFixed(d);
+const int = (n) =>
+  (n === null || n === undefined) ? "—" : Number(n).toLocaleString("en-US");
+
+function ruleText(r) {
+  return [
+    `收盤價 > 前 ${r.breakout_lookback} 日最高收盤（突破）`,
+    `當日成交量 ≥ 前 ${r.vol_base_days} 日均量 × ${r.vol_mult}（出量）`,
+    `當日漲幅 ≥ ${r.min_change_pct}%`,
+    `前 ${r.vol_base_days} 日均量 ≥ ${int(r.min_avg_lots)} 張（流動性）`,
+    `收盤價 ≥ ${r.min_close} 元`,
+  ];
+}
+
+function card(it) {
+  const lv = it.levels || {};
+  const up = it.change_pct >= 0;
+  const reached = (lv.targets_reached || []).length
+    ? `<div class="note">※ 收盤已達目標：${lv.targets_reached.join("、")}</div>` : "";
+  return `
+  <div class="card">
+    <h2><span class="arrow">⬆️</span>${it.id} ${it.name}</h2>
+    <div class="tags">
+      <span class="tag">${it.market}</span>
+      ${it.group ? `<span class="tag">${it.group}</span>` : ""}
+      <span class="tag">${it.date}</span>
+    </div>
+
+    <div class="sec quote">
+      <h3>📊 行情資訊（日終）</h3>
+      <div class="row"><span class="k">收盤價</span><span class="v big">${fmt(it.close)}</span></div>
+      <div class="row"><span class="k">漲跌幅</span>
+        <span class="v ${up ? "red" : "green"}">${up ? "+" : ""}${fmt(it.change_pct)}%</span></div>
+      <div class="row"><span class="k">當日均價</span><span class="v">${fmt(it.vwap)}</span></div>
+      <div class="row"><span class="k">收盤 vs 均價</span>
+        <span class="v ${it.above_vwap ? "red" : "green"}">
+          ${it.above_vwap ? "收盤 > 均價（尾盤偏強）" : "收盤 < 均價（尾盤偏弱）"}</span></div>
+      <div class="note">當日均價 = 成交金額 ÷ 成交股數（官方揭露值）</div>
+    </div>
+
+    <div class="sec vol">
+      <h3>📊 量能統計</h3>
+      <div class="row"><span class="k">成交量</span><span class="v">${int(it.lots)} 張</span></div>
+      <div class="row"><span class="k">成交金額</span><span class="v">${fmt(it.amount_yi)} 億</span></div>
+      <div class="row"><span class="k">量能倍數</span>
+        <span class="v red">${fmt(it.vol_ratio)}x</span></div>
+      <div class="row"><span class="k">前 5 日均量</span><span class="v">${int(it.avg_lots)} 張</span></div>
+      <div class="note">無逐筆明細，故不提供大單買超／買賣成交比／大單區間。</div>
+    </div>
+
+    <div class="sec play">
+      <h3>🎯 交易劇本（本專案模型計算）</h3>
+      <div class="row"><span class="k">突破確認線</span>
+        <span class="v blue">${fmt(lv.breakout_line)}</span></div>
+      <div class="row"><span class="k">箱底 / 箱高</span>
+        <span class="v">${fmt(it.prior_low)} / ${fmt(it.prior_high - it.prior_low)}</span></div>
+      <div class="row"><span class="k">ATR(14)</span><span class="v">${fmt(lv.atr)}</span></div>
+      <div class="row"><span class="k">防守／型態失效</span>
+        <span class="v green">${fmt(lv.stop)}</span></div>
+      <div class="row"><span class="k">目標1 / 目標2</span>
+        <span class="v red">${fmt(lv.target1)} / ${fmt(lv.target2)}</span></div>
+      ${reached}
+      <div class="row"><span class="k">追價進場 ${fmt(lv.chase_entry)} → 目標 ${fmt(lv.chase_target)}</span>
+        <span class="v ${(lv.rr_chase ?? 0) >= 1.5 ? "red" : ""}">R/R ${fmt(lv.rr_chase)}</span></div>
+      <div class="row"><span class="k">回測承接 ${fmt(lv.pullback_lo)}~${fmt(lv.pullback_hi)} → 目標 ${fmt(lv.pullback_target)}</span>
+        <span class="v ${(lv.rr_pullback ?? 0) >= 1.5 ? "red" : ""}">R/R ${fmt(lv.rr_pullback)}</span></div>
+      <div class="note">價位皆由前 20 日高低、箱體量測與 ATR 推導，可重算；非投資建議。</div>
+    </div>
+  </div>`;
+}
+
+function render() {
+  if (!DATA) return;
+  const q = $("q").value.trim().toLowerCase();
+  const key = $("sort").value;
+  let items = DATA.items.filter((it) =>
+    !q || `${it.id} ${it.name} ${it.group}`.toLowerCase().includes(q));
+  items = items.slice().sort((a, b) => {
+    const get = (x) => (key === "rr_pullback" ? (x.levels?.rr_pullback ?? -99) : (x[key] ?? -99));
+    return get(b) - get(a);
+  });
+  $("count").textContent = `${items.length} / ${DATA.items.length} 檔`;
+  $("list").innerHTML = items.length
+    ? items.map(card).join("")
+    : `<div class="empty">沒有符合的標的。<br>今日全市場掃描 ${int(DATA.scanned)} 檔普通股，
+       無標的同時符合全部條件是正常結果——盤整期可能連續多日掛零。</div>`;
+}
+
+fetch("breakout_export.json", { cache: "no-store" })
+  .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then((d) => {
+    DATA = d;
+    $("meta").innerHTML =
+      `判定日 <b>${d.trade_date}</b>　·　全市場掃描 ${int(d.scanned)} 檔　·　命中 <b>${d.items.length}</b> 檔<br>` +
+      `規則版本 ${d.rules_version}　·　資料產生 ${(d.generated_at || "").replace("T", " ").slice(0, 16)}`;
+    $("rules").innerHTML = ruleText(d.rules).map((t) => `<li>${t}</li>`).join("");
+    $("foot").innerHTML =
+      (d.limitations || []).map((t) => `${t}`).join("<br>") +
+      "<br><br>本頁為規則式量化模型與公開市場資料所產生的研究性預測；預測可能失效。投資請自行評估風險。";
+    render();
+  })
+  .catch((e) => {
+    $("meta").textContent = "資料載入失敗：" + e.message;
+    $("list").innerHTML = `<div class="empty">找不到 breakout_export.json，
+      請先執行 <code>python breakout_scan.py export</code>。</div>`;
+  });
+
+$("q").addEventListener("input", render);
+$("sort").addEventListener("change", render);
+</script>
+</body>
+</html>
