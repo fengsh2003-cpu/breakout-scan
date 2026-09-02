@@ -7,6 +7,9 @@ on:
     - cron: "30 6 * * 1-5"
     # 保險第二班：台北時間 17:00（UTC 09:00），補抓 14:30 時尚未更新的情況
     - cron: "0 9 * * 1-5"
+    # 第三班：台北時間 21:30（UTC 13:30）。融資融券餘額的發布時間明顯晚於
+    # 收盤行情，前兩班常常只拿得到空表（實測 18:44 仍為空），這班才補得齊。
+    - cron: "30 13 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -29,6 +32,9 @@ jobs:
       # breakout_scan.py 只用標準庫，故不需 pip install 任何套件
       - name: 抓取近日全市場行情（已快取者自動略過）
         run: python breakout_scan.py backfill 12
+
+      - name: 抓取全市場籌碼（融資融券＋三大法人）
+        run: python breakout_scan.py chips 8
 
       - name: 重新掃描並輸出
         run: python breakout_scan.py export

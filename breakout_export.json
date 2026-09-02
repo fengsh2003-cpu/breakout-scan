@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-09-02T09:24:25+00:00",
+ "generated_at": "2026-09-02T18:44:12+08:00",
  "trade_date": "2026-09-02",
- "rules_version": "v0 (2026-09-02)",
+ "rules_version": "v1 (2026-09-02)",
  "scanned": 1949,
  "rules": {
   "breakout_lookback": 20,
@@ -10,138 +10,31 @@
   "min_change_pct": 3.0,
   "min_avg_lots": 500,
   "min_close": 10.0,
-  "atr_n": 14
+  "atr_n": 14,
+  "red_min_vwap_ratio": 0.985,
+  "red_min_avg_lots": 200,
+  "red_min_close": 10.0,
+  "red_min_vol_ratio": 1.0
  },
  "limitations": [
   "日終資料，非盤中即時；訊號於收盤後成立，最快次日開盤才能進場。",
-  "無逐筆成交明細（tick），故無大單買超、買賣成交比、大單區間等欄位。",
+  "無逐筆成交明細（tick），故無大單買超、買賣成交比、大單區間等欄位；隔日沖的盤中進出場訊號（大單翻綠、跌破大單均價）本工具無法提供。",
+  "紅點的「鎖死度」是以當日均價÷漲停價推估，非確認全日未打開。",
   "規則門檻為初始設定值，尚未經回測校準，不等於已驗證的勝率。"
  ],
  "items": [
-  {
-   "id": "3141",
-   "name": "晶宏",
-   "market": "TPEx",
-   "date": "2026-09-02",
-   "hit": true,
-   "close": 99.5,
-   "open": 93.5,
-   "high": 99.5,
-   "low": 91.6,
-   "prev_close": 90.5,
-   "change_pct": 9.94,
-   "vwap": 96.83,
-   "above_vwap": true,
-   "lots": 18047,
-   "avg_lots": 3267,
-   "vol_ratio": 5.52,
-   "prior_high": 90.5,
-   "prior_low": 67.8,
-   "amount_yi": 17.47,
-   "levels": {
-    "breakout_line": 90.5,
-    "chase_entry": 99.5,
-    "pullback_lo": 90.5,
-    "pullback_hi": 91.89,
-    "pullback_mid": 91.19,
-    "stop": 88.18,
-    "target1": 101.85,
-    "target2": 113.2,
-    "targets_reached": [],
-    "chase_target": 101.85,
-    "rr_chase": 0.21,
-    "pullback_target": 101.85,
-    "rr_pullback": 3.54,
-    "atr": 4.65
-   },
-   "group": "半導體業"
-  },
-  {
-   "id": "3019",
-   "name": "亞光",
-   "market": "TWSE",
-   "date": "2026-09-02",
-   "hit": true,
-   "close": 157.5,
-   "open": 143.0,
-   "high": 157.5,
-   "low": 141.5,
-   "prev_close": 143.5,
-   "change_pct": 9.76,
-   "vwap": 154.68,
-   "above_vwap": true,
-   "lots": 24643,
-   "avg_lots": 5160,
-   "vol_ratio": 4.78,
-   "prior_high": 143.5,
-   "prior_low": 128.5,
-   "amount_yi": 38.12,
-   "levels": {
-    "breakout_line": 143.5,
-    "chase_entry": 157.5,
-    "pullback_lo": 143.5,
-    "pullback_hi": 145.59,
-    "pullback_mid": 144.55,
-    "stop": 140.02,
-    "target1": 151.0,
-    "target2": 158.5,
-    "targets_reached": [
-     151.0
-    ],
-    "chase_target": 158.5,
-    "rr_chase": 0.06,
-    "pullback_target": 151.0,
-    "rr_pullback": 1.42,
-    "atr": 6.95
-   },
-   "group": "光電業"
-  },
-  {
-   "id": "8431",
-   "name": "匯鑽科",
-   "market": "TPEx",
-   "date": "2026-09-02",
-   "hit": true,
-   "close": 59.8,
-   "open": 54.3,
-   "high": 59.8,
-   "low": 54.1,
-   "prev_close": 54.4,
-   "change_pct": 9.93,
-   "vwap": 58.73,
-   "above_vwap": true,
-   "lots": 3177,
-   "avg_lots": 691,
-   "vol_ratio": 4.6,
-   "prior_high": 54.4,
-   "prior_low": 44.5,
-   "amount_yi": 1.87,
-   "levels": {
-    "breakout_line": 54.4,
-    "chase_entry": 59.8,
-    "pullback_lo": 54.4,
-    "pullback_hi": 55.21,
-    "pullback_mid": 54.8,
-    "stop": 53.06,
-    "target1": 59.35,
-    "target2": 64.3,
-    "targets_reached": [
-     59.35
-    ],
-    "chase_target": 64.3,
-    "rr_chase": 0.67,
-    "pullback_target": 59.35,
-    "rr_pullback": 2.61,
-    "atr": 2.69
-   },
-   "group": "其他電子業"
-  },
   {
    "id": "3023",
    "name": "信邦",
    "market": "TWSE",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 352.0,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9333,
    "close": 330.0,
    "open": 323.0,
    "high": 331.5,
@@ -172,7 +65,14 @@
     "rr_pullback": 1.24,
     "atr": 11.03
    },
-   "group": "電子零組件業"
+   "group": "電子零組件業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 582,
+    "inst_days": 4
+   }
   },
   {
    "id": "8240",
@@ -180,6 +80,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 53.7,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9373,
    "close": 50.7,
    "open": 48.9,
    "high": 52.0,
@@ -210,7 +116,14 @@
     "rr_pullback": 2.98,
     "atr": 2.01
    },
-   "group": "光電業"
+   "group": "光電業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -639,
+    "inst_days": 4
+   }
   },
   {
    "id": "6405",
@@ -218,6 +131,12 @@
    "market": "TWSE",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 44.7,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9639,
    "close": 42.25,
    "open": 40.9,
    "high": 44.7,
@@ -248,7 +167,14 @@
     "rr_pullback": 1.21,
     "atr": 2.48
    },
-   "group": "光電業"
+   "group": "光電業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -425,
+    "inst_days": 4
+   }
   },
   {
    "id": "4576",
@@ -256,6 +182,12 @@
    "market": "TWSE",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 253.5,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.962,
    "close": 242.0,
    "open": 229.0,
    "high": 252.0,
@@ -286,7 +218,14 @@
     "rr_pullback": 1.82,
     "atr": 14.95
    },
-   "group": "電機機械"
+   "group": "電機機械",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 1696,
+    "inst_days": 4
+   }
   },
   {
    "id": "3380",
@@ -294,6 +233,12 @@
    "market": "TWSE",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 31.15,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.95,
    "close": 30.05,
    "open": 28.85,
    "high": 30.55,
@@ -324,7 +269,14 @@
     "rr_pullback": 1.65,
     "atr": 1.06
    },
-   "group": "通信網路業"
+   "group": "通信網路業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -1431,
+    "inst_days": 4
+   }
   },
   {
    "id": "6530",
@@ -332,6 +284,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 106.0,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9472,
    "close": 101.0,
    "open": 93.7,
    "high": 105.0,
@@ -362,7 +320,14 @@
     "rr_pullback": 2.58,
     "atr": 5.94
    },
-   "group": "通信網路業"
+   "group": "通信網路業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -161,
+    "inst_days": 4
+   }
   },
   {
    "id": "3545",
@@ -370,6 +335,12 @@
    "market": "TWSE",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 54.8,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9501,
    "close": 52.5,
    "open": 50.0,
    "high": 52.8,
@@ -400,7 +371,14 @@
     "rr_pullback": 1.28,
     "atr": 1.83
    },
-   "group": "半導體業"
+   "group": "半導體業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 313,
+    "inst_days": 4
+   }
   },
   {
    "id": "6217",
@@ -408,6 +386,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 208.0,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9645,
    "close": 195.5,
    "open": 190.0,
    "high": 207.5,
@@ -438,85 +422,14 @@
     "rr_pullback": 2.44,
     "atr": 14.83
    },
-   "group": "電子零組件業"
-  },
-  {
-   "id": "6510",
-   "name": "精測",
-   "market": "TPEx",
-   "date": "2026-09-02",
-   "hit": true,
-   "close": 3435.0,
-   "open": 3290.0,
-   "high": 3435.0,
-   "low": 3235.0,
-   "prev_close": 3125.0,
-   "change_pct": 9.92,
-   "vwap": 3353.57,
-   "above_vwap": true,
-   "lots": 1708,
-   "avg_lots": 581,
-   "vol_ratio": 2.94,
-   "prior_high": 3125.0,
-   "prior_low": 2570.0,
-   "amount_yi": 57.28,
-   "levels": {
-    "breakout_line": 3125.0,
-    "chase_entry": 3435.0,
-    "pullback_lo": 3125.0,
-    "pullback_hi": 3186.45,
-    "pullback_mid": 3155.72,
-    "stop": 3022.59,
-    "target1": 3402.5,
-    "target2": 3680.0,
-    "targets_reached": [
-     3402.5
-    ],
-    "chase_target": 3680.0,
-    "rr_chase": 0.59,
-    "pullback_target": 3402.5,
-    "rr_pullback": 1.85,
-    "atr": 204.82
-   },
-   "group": "半導體業"
-  },
-  {
-   "id": "4976",
-   "name": "佳凌",
-   "market": "TWSE",
-   "date": "2026-09-02",
-   "hit": true,
-   "close": 41.55,
-   "open": 37.95,
-   "high": 41.55,
-   "low": 37.85,
-   "prev_close": 37.8,
-   "change_pct": 9.92,
-   "vwap": 40.88,
-   "above_vwap": true,
-   "lots": 12907,
-   "avg_lots": 5138,
-   "vol_ratio": 2.51,
-   "prior_high": 40.0,
-   "prior_low": 35.0,
-   "amount_yi": 5.28,
-   "levels": {
-    "breakout_line": 40.0,
-    "chase_entry": 41.55,
-    "pullback_lo": 40.0,
-    "pullback_hi": 40.7,
-    "pullback_mid": 40.35,
-    "stop": 38.84,
-    "target1": 42.5,
-    "target2": 45.0,
-    "targets_reached": [],
-    "chase_target": 42.5,
-    "rr_chase": 0.35,
-    "pullback_target": 42.5,
-    "rr_pullback": 1.42,
-    "atr": 2.32
-   },
-   "group": "光電業"
+   "group": "電子零組件業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 457,
+    "inst_days": 4
+   }
   },
   {
    "id": "3234",
@@ -524,6 +437,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 220.0,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9707,
    "close": 211.0,
    "open": 199.0,
    "high": 220.0,
@@ -554,7 +473,14 @@
     "rr_pullback": 5.6,
     "atr": 12.8
    },
-   "group": "通信網路業"
+   "group": "通信網路業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 1441,
+    "inst_days": 4
+   }
   },
   {
    "id": "2455",
@@ -562,6 +488,12 @@
    "market": "TWSE",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 576.0,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9307,
    "close": 542.0,
    "open": 515.0,
    "high": 552.0,
@@ -592,7 +524,14 @@
     "rr_pullback": 4.05,
     "atr": 29.77
    },
-   "group": "通信網路業"
+   "group": "通信網路業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 5638,
+    "inst_days": 4
+   }
   },
   {
    "id": "6218",
@@ -600,6 +539,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 45.75,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9617,
    "close": 43.55,
    "open": 41.95,
    "high": 45.35,
@@ -630,7 +575,14 @@
     "rr_pullback": 2.54,
     "atr": 2.23
    },
-   "group": "通信網路業"
+   "group": "通信網路業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 1789,
+    "inst_days": 4
+   }
   },
   {
    "id": "6640",
@@ -638,6 +590,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 1230.0,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9871,
    "close": 1210.0,
    "open": 1120.0,
    "high": 1230.0,
@@ -668,7 +626,14 @@
     "rr_pullback": 2.22,
     "atr": 83.91
    },
-   "group": "半導體業"
+   "group": "半導體業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -81,
+    "inst_days": 4
+   }
   },
   {
    "id": "3630",
@@ -676,6 +641,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 28.65,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9514,
    "close": 27.1,
    "open": 25.9,
    "high": 28.3,
@@ -706,7 +677,14 @@
     "rr_pullback": 1.07,
     "atr": 1.07
    },
-   "group": "光電業"
+   "group": "光電業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 27,
+    "inst_days": 4
+   }
   },
   {
    "id": "6291",
@@ -714,6 +692,12 @@
    "market": "TPEx",
    "date": "2026-09-02",
    "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 466.0,
+   "at_limit": false,
+   "close_is_high": false,
+   "lock_ratio": 0.9637,
    "close": 440.0,
    "open": 423.5,
    "high": 465.5,
@@ -744,85 +728,276 @@
     "rr_pullback": 1.67,
     "atr": 29.23
    },
-   "group": "半導體業"
-  },
+   "group": "半導體業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -275,
+    "inst_days": 4
+   }
+  }
+ ],
+ "red_items": [
   {
-   "id": "5285",
-   "name": "界霖",
-   "market": "TWSE",
-   "date": "2026-09-02",
-   "hit": true,
-   "close": 89.6,
-   "open": 81.5,
-   "high": 89.6,
-   "low": 81.5,
-   "prev_close": 81.5,
-   "change_pct": 9.94,
-   "vwap": 87.36,
-   "above_vwap": true,
-   "lots": 2605,
-   "avg_lots": 1221,
-   "vol_ratio": 2.13,
-   "prior_high": 84.0,
-   "prior_low": 74.4,
-   "amount_yi": 2.28,
-   "levels": {
-    "breakout_line": 84.0,
-    "chase_entry": 89.6,
-    "pullback_lo": 84.0,
-    "pullback_hi": 85.31,
-    "pullback_mid": 84.66,
-    "stop": 81.82,
-    "target1": 88.8,
-    "target2": 93.6,
-    "targets_reached": [
-     88.8
-    ],
-    "chase_target": 93.6,
-    "rr_chase": 0.51,
-    "pullback_target": 88.8,
-    "rr_pullback": 1.46,
-    "atr": 4.37
-   },
-   "group": "半導體業"
-  },
-  {
-   "id": "6620",
-   "name": "漢達",
+   "id": "8040",
+   "name": "九暘",
    "market": "TPEx",
    "date": "2026-09-02",
-   "hit": true,
-   "close": 95.4,
-   "open": 87.9,
-   "high": 95.4,
-   "low": 87.7,
-   "prev_close": 86.8,
-   "change_pct": 9.91,
-   "vwap": 93.51,
+   "hit": false,
+   "blue": false,
+   "red": true,
+   "limit_up": 82.9,
+   "at_limit": true,
+   "close_is_high": true,
+   "lock_ratio": 1.0,
+   "close": 82.9,
+   "open": 82.9,
+   "high": 82.9,
+   "low": 82.9,
+   "prev_close": 75.4,
+   "change_pct": 9.95,
+   "vwap": 82.9,
    "above_vwap": true,
-   "lots": 2888,
-   "avg_lots": 1396,
-   "vol_ratio": 2.07,
-   "prior_high": 92.9,
-   "prior_low": 74.0,
-   "amount_yi": 2.7,
+   "lots": 744,
+   "avg_lots": 350,
+   "vol_ratio": 2.13,
+   "prior_high": 76.0,
+   "prior_low": 67.4,
+   "amount_yi": 0.62,
    "levels": {
-    "breakout_line": 92.9,
-    "chase_entry": 95.4,
-    "pullback_lo": 92.9,
-    "pullback_hi": 94.48,
-    "pullback_mid": 93.69,
-    "stop": 90.27,
-    "target1": 102.35,
-    "target2": 111.8,
-    "targets_reached": [],
-    "chase_target": 102.35,
-    "rr_chase": 1.35,
-    "pullback_target": 102.35,
-    "rr_pullback": 2.53,
-    "atr": 5.26
+    "breakout_line": 76.0,
+    "chase_entry": 82.9,
+    "pullback_lo": 76.0,
+    "pullback_hi": 77.15,
+    "pullback_mid": 76.58,
+    "stop": 74.09,
+    "target1": 80.3,
+    "target2": 84.6,
+    "targets_reached": [
+     80.3
+    ],
+    "chase_target": 84.6,
+    "rr_chase": 0.19,
+    "pullback_target": 80.3,
+    "rr_pullback": 1.49,
+    "atr": 3.83
    },
-   "group": "生技醫療業"
+   "group": "半導體業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 148,
+    "inst_days": 4
+   }
+  },
+  {
+   "id": "2419",
+   "name": "仲琦",
+   "market": "TWSE",
+   "date": "2026-09-02",
+   "hit": false,
+   "blue": false,
+   "red": true,
+   "limit_up": 27.9,
+   "at_limit": true,
+   "close_is_high": true,
+   "lock_ratio": 0.995,
+   "close": 27.9,
+   "open": 26.55,
+   "high": 27.9,
+   "low": 26.5,
+   "prev_close": 25.4,
+   "change_pct": 9.84,
+   "vwap": 27.76,
+   "above_vwap": true,
+   "lots": 2494,
+   "avg_lots": 383,
+   "vol_ratio": 6.51,
+   "prior_high": 25.45,
+   "prior_low": 23.75,
+   "amount_yi": 0.69,
+   "levels": {
+    "breakout_line": 25.45,
+    "chase_entry": 27.9,
+    "pullback_lo": 25.45,
+    "pullback_hi": 25.7,
+    "pullback_mid": 25.57,
+    "stop": 25.03,
+    "target1": 26.3,
+    "target2": 27.15,
+    "targets_reached": [
+     26.3,
+     27.15
+    ],
+    "chase_target": null,
+    "rr_chase": null,
+    "pullback_target": 26.3,
+    "rr_pullback": 1.35,
+    "atr": 0.84
+   },
+   "group": "通信網路業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 398,
+    "inst_days": 4
+   }
+  },
+  {
+   "id": "2465",
+   "name": "麗臺",
+   "market": "TWSE",
+   "date": "2026-09-02",
+   "hit": false,
+   "blue": false,
+   "red": true,
+   "limit_up": 105.0,
+   "at_limit": true,
+   "close_is_high": true,
+   "lock_ratio": 0.9943,
+   "close": 105.0,
+   "open": 99.2,
+   "high": 105.0,
+   "low": 99.2,
+   "prev_close": 95.8,
+   "change_pct": 9.6,
+   "vwap": 104.4,
+   "above_vwap": true,
+   "lots": 8514,
+   "avg_lots": 3487,
+   "vol_ratio": 2.44,
+   "prior_high": 105.0,
+   "prior_low": 79.6,
+   "amount_yi": 8.89,
+   "levels": {
+    "breakout_line": 105.0,
+    "chase_entry": 105.0,
+    "pullback_lo": 105.0,
+    "pullback_hi": 106.83,
+    "pullback_mid": 105.91,
+    "stop": 101.95,
+    "target1": 117.7,
+    "target2": 130.4,
+    "targets_reached": [],
+    "chase_target": 117.7,
+    "rr_chase": 4.16,
+    "pullback_target": 117.7,
+    "rr_pullback": 2.98,
+    "atr": 6.1
+   },
+   "group": "電腦及週邊設備業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": 689,
+    "inst_days": 4
+   }
+  },
+  {
+   "id": "6683",
+   "name": "雍智科技",
+   "market": "TPEx",
+   "date": "2026-09-02",
+   "hit": false,
+   "blue": false,
+   "red": true,
+   "limit_up": 1460.0,
+   "at_limit": true,
+   "close_is_high": true,
+   "lock_ratio": 0.989,
+   "close": 1460.0,
+   "open": 1405.0,
+   "high": 1460.0,
+   "low": 1400.0,
+   "prev_close": 1330.0,
+   "change_pct": 9.77,
+   "vwap": 1443.95,
+   "above_vwap": true,
+   "lots": 716,
+   "avg_lots": 576,
+   "vol_ratio": 1.24,
+   "prior_high": 1395.0,
+   "prior_low": 1050.0,
+   "amount_yi": 10.34,
+   "levels": {
+    "breakout_line": 1395.0,
+    "chase_entry": 1460.0,
+    "pullback_lo": 1395.0,
+    "pullback_hi": 1425.08,
+    "pullback_mid": 1410.04,
+    "stop": 1344.87,
+    "target1": 1567.5,
+    "target2": 1740.0,
+    "targets_reached": [],
+    "chase_target": 1567.5,
+    "rr_chase": 0.93,
+    "pullback_target": 1567.5,
+    "rr_pullback": 2.42,
+    "atr": 100.25
+   },
+   "group": "半導體業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -524,
+    "inst_days": 4
+   }
+  },
+  {
+   "id": "6272",
+   "name": "驊陞",
+   "market": "TWSE",
+   "date": "2026-09-02",
+   "hit": false,
+   "blue": false,
+   "red": true,
+   "limit_up": 27.65,
+   "at_limit": true,
+   "close_is_high": true,
+   "lock_ratio": 0.9856,
+   "close": 27.65,
+   "open": 25.8,
+   "high": 27.65,
+   "low": 25.65,
+   "prev_close": 25.15,
+   "change_pct": 9.94,
+   "vwap": 27.25,
+   "above_vwap": true,
+   "lots": 389,
+   "avg_lots": 340,
+   "vol_ratio": 1.14,
+   "prior_high": 26.5,
+   "prior_low": 22.8,
+   "amount_yi": 0.11,
+   "levels": {
+    "breakout_line": 26.5,
+    "chase_entry": 27.65,
+    "pullback_lo": 26.5,
+    "pullback_hi": 26.88,
+    "pullback_mid": 26.69,
+    "stop": 25.87,
+    "target1": 28.35,
+    "target2": 30.2,
+    "targets_reached": [],
+    "chase_target": 28.35,
+    "rr_chase": 0.39,
+    "pullback_target": 28.35,
+    "rr_pullback": 2.02,
+    "atr": 1.26
+   },
+   "group": "電子零組件業",
+   "chips": {
+    "margin_lots": null,
+    "margin_used_pct": null,
+    "short_margin_pct": null,
+    "inst_net_lots": -387,
+    "inst_days": 4
+   }
   }
  ]
 }

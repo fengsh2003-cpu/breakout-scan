@@ -30,6 +30,7 @@ data/market/<YYYY-MM-DD>.json，每個交易日一檔，已存在則不重抓。
 ----
     python breakout_scan.py backfill [days=90]   建立/補齊全市場日K快取
     python breakout_scan.py scan [date]          掃描並列印當日訊號
+    python breakout_scan.py chips [days=8]       補齊全市場籌碼（融資券＋法人）
     python breakout_scan.py export [date]        輸出行動網頁用 JSON
     python breakout_scan.py prune [keep=70]      刪除過舊的日快取（雲端用）
 """
@@ -46,6 +47,7 @@ from urllib.request import Request, urlopen
 BASE = Path(__file__).resolve().parent
 DATA_DIR = BASE / "data"
 MARKET_DIR = DATA_DIR / "market"
+CHIP_DIR = DATA_DIR / "chips"
 
 TWSE_URL = "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX"
 TPEX_URL = "https://www.tpex.org.tw/www/zh-tw/afterTrading/otc"
@@ -137,7 +139,7 @@ def code_map():
 # ---------------------------------------------------------------------------
 # 篩選規則（全部可重算；調整時同步更新 RULES_VERSION 與行動網頁的說明段落）
 # ---------------------------------------------------------------------------
-RULES_VERSION = "v0 (2026-09-02)"
+RULES_VERSION = "v1 (2026-09-02)"  # v1：新增紅點（漲停鎖死）與全市場籌碼欄位
 BREAKOUT_LOOKBACK = 20   # 突破基準：前 N 日最高「收盤」（不含當日）
 VOL_MULT = 2.0           # 出量：當日量 >= 前 5 日均量 × 此倍數（均量不含當日）
 VOL_BASE_DAYS = 5
@@ -146,6 +148,20 @@ MIN_AVG_LOTS = 500       # 前 5 日均量下限（張），濾掉流動性不�
 MIN_CLOSE = 10.0         # 收盤價下限（元），濾掉雞蛋水餃股
 ATR_N = 14
 MIN_BARS = ATR_N + BREAKOUT_LOOKBACK + 2  # 計算所需最少根數
+
+# --- 紅點（漲停鎖死 → 隔日衝候選）---
+# 「尾盤鎖漲停」在日 K 的指紋：收盤 = 漲停價 且 收盤 = 當日最高。
+# 「鎖得多死」用「當日均價 ÷ 漲停價」當代理——均價越貼近漲停，代表整天大部分
+# 成交都在漲停價附近、盤中幾乎沒打開。這是日終資料能做到的最接近版本，
+# **不等於**真的確認全日未打開（那需要盤中逐筆資料）。
+RED_MIN_VWAP_RATIO = 0.985   # 均價 / 漲停價 下限
+RED_MIN_AVG_LOTS = 200       # 隔日衝標的流動性門檻可低於波段
+RED_MIN_CLOSE = 10.0
+# 漲停但量縮多半是「惜售型」——沒人賣所以漲停，而不是主力用大量把賣單吃光
+# 鎖上去。隔日衝要的是後者，故要求當日量至少不低於前 5 日均量。
+# 與其他門檻同樣是初始設定值，未經回測校準。
+RED_MIN_VOL_RATIO = 1.0
+PRICE_EPS = 1e-6             # 價格比較容差（台股最小跳動 0.01，遠大於此）
 
 
 # ---------------------------------------------------------------------------
@@ -174,6 +190,39 @@ def _is_common_share(code):
     權證（6 碼）與上櫃的次順位代號（如 31672）。
     """
     return len(code) == 4 and code.isdigit()
+
+
+def tick_size(price):
+    """台股股票最小升降單位（依價格級距）。"""
+    if price < 10:
+        return 0.01
+    if price < 50:
+        return 0.05
+    if price < 100:
+        return 0.1
+    if price < 500:
+        return 0.5
+    if price < 1000:
+        return 1.0
+    return 5.0
+
+
+def limit_up_price(prev_close):
+    """由前一日收盤推算漲停價：前收 × 1.1，再向下取到該價位級距的合法檔位。
+
+    級距由「取整後的價格」本身決定，故先以未取整價估級距、取整後再驗一次，
+    避免落在 10/50/100/500/1000 邊界時用錯級距。
+    """
+    if not prev_close or prev_close <= 0:
+        return None
+    raw = prev_close * 1.1
+    for _ in range(2):
+        t = tick_size(raw)
+        snapped = int(raw / t + PRICE_EPS) * t
+        if abs(tick_size(snapped) - t) < PRICE_EPS:
+            return round(snapped, 2)
+        raw = snapped
+    return round(snapped, 2)
 
 
 def _pick_table(payload, must_have):
@@ -292,6 +341,129 @@ def fetch_tpex_day(iso_date):
     return _rows_from(table.get("data") or [], idx, "TPEx")
 
 
+# ---------------------------------------------------------------------------
+# 全市場籌碼（融資融券、三大法人）— 同樣是「1 次請求拿整個市場」的官方端點
+#
+# 刻意不走 FinMind 的個股 dataset：那是每檔一次請求，數十檔命中就要數十次；
+# 這裡兩個市場各 2 次請求就涵蓋全市場，且不需要 token。
+# ---------------------------------------------------------------------------
+TWSE_MARGIN_URL = "https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN"
+TWSE_INST_URL = "https://www.twse.com.tw/rwd/zh/fund/T86"
+TPEX_MARGIN_URL = "https://www.tpex.org.tw/www/zh-tw/margin/balance"
+TPEX_INST_URL = "https://www.tpex.org.tw/www/zh-tw/insti/dailyTrade"
+
+
+def fetch_margin_day(iso_date):
+    """全市場融資融券餘額。回傳 {id: {margin, limit, short}}，單位皆為「張」。"""
+    out = {}
+    # --- 上市 ---
+    try:
+        p = fetch_json_url(TWSE_MARGIN_URL,
+                           {"date": iso_date.replace("-", ""), "selectType": "ALL",
+                            "response": "json"}, label=f"TWSE/融資券 {iso_date}")
+        if str(p.get("stat", "")).upper() == "OK":
+            t = _pick_table(p, ["代號", "次一營業日限額"])
+            for r in (t or {}).get("data", []):
+                code = str(r[0]).strip()
+                if not _is_common_share(code):
+                    continue
+                # 欄位順序：融資(買進,賣出,現金償還,前日餘額,今日餘額,限額)=2..7，
+                # 融券同結構=8..13。官方以區段重複相同欄名，只能依位置取值。
+                out[code] = {"margin": _num(r[6]), "limit": _num(r[7]),
+                             "short": _num(r[12])}
+    except Exception as exc:
+        print(f"{iso_date} TWSE 融資券抓取失敗：{exc}")
+    # --- 上櫃 ---
+    try:
+        y, m, d = iso_date.split("-")
+        p = fetch_json_url(TPEX_MARGIN_URL,
+                           {"date": f"{int(y) - 1911}/{m}/{d}", "response": "json"},
+                           label=f"TPEx/融資券 {iso_date}")
+        t = _pick_table(p, ["代號", "資餘額", "資限額"])
+        f = (t or {}).get("fields") or []
+        i_m = _field_index(f, "資餘額")
+        i_l = _field_index(f, "資限額")
+        i_s = _field_index(f, "券餘額")
+        if t and None not in (i_m, i_l, i_s):
+            for r in t.get("data", []):
+                code = str(r[0]).strip()
+                if _is_common_share(code):
+                    out[code] = {"margin": _num(r[i_m]), "limit": _num(r[i_l]),
+                                 "short": _num(r[i_s])}
+    except Exception as exc:
+        print(f"{iso_date} TPEx 融資券抓取失敗：{exc}")
+    return out
+
+
+def fetch_inst_day(iso_date):
+    """全市場三大法人買賣超。回傳 {id: 淨買賣超股數}。
+
+    直接取官方already-aggregated 的「三大法人買賣超股數」欄，不自行加總分項，
+    避免重蹈本專案早期「外資是否含外資自營」那類定義分歧。
+    """
+    out = {}
+    try:
+        p = fetch_json_url(TWSE_INST_URL,
+                           {"date": iso_date.replace("-", ""), "selectType": "ALL",
+                            "response": "json"}, label=f"TWSE/法人 {iso_date}")
+        if str(p.get("stat", "")).upper() == "OK":
+            f = p.get("fields") or []
+            i_n = _field_index(f, "三大法人買賣超股數")
+            if i_n is not None:
+                for r in p.get("data", []):
+                    code = str(r[0]).strip()
+                    if _is_common_share(code):
+                        out[code] = _num(r[i_n])
+    except Exception as exc:
+        print(f"{iso_date} TWSE 法人抓取失敗：{exc}")
+    try:
+        y, m, d = iso_date.split("-")
+        p = fetch_json_url(TPEX_INST_URL,
+                           {"type": "Daily", "sect": "EW",
+                            "date": f"{int(y) - 1911}/{m}/{d}", "response": "json"},
+                           label=f"TPEx/法人 {iso_date}")
+        t = _pick_table(p, ["代號", "三大法人買賣超股數合計"])
+        f = (t or {}).get("fields") or []
+        i_n = _field_index(f, "三大法人買賣超股數合計")
+        if t and i_n is not None:
+            for r in t.get("data", []):
+                code = str(r[0]).strip()
+                if _is_common_share(code):
+                    out[code] = _num(r[i_n])
+    except Exception as exc:
+        print(f"{iso_date} TPEx 法人抓取失敗：{exc}")
+    return out
+
+
+def chip_cache_path(iso_date):
+    return CHIP_DIR / f"{iso_date}.json"
+
+
+def load_chip_day(iso_date, fetch=True):
+    """讀取單日全市場籌碼；快取優先。回傳 {"margin": {...}, "inst": {...}}。"""
+    path = chip_cache_path(iso_date)
+    if path.exists():
+        try:
+            with path.open(encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"{iso_date} 籌碼快取毀損，重抓：{exc}")
+    if not fetch:
+        return {"margin": {}, "inst": {}}
+    data = {"margin": fetch_margin_day(iso_date), "inst": fetch_inst_day(iso_date)}
+    # 融資券的發布時間晚於收盤行情，當日盤後早一點抓會拿到空表。空表**不寫入
+    # 快取**，否則會被永久記住、之後再也不會重抓（行情快取可以接受空值，因為
+    # 那代表非交易日；籌碼的空值則多半只是還沒發布）。
+    if not data["margin"] or not data["inst"]:
+        print(f"{iso_date} 籌碼尚未齊全（融資券 {len(data['margin'])} 檔、"
+              f"法人 {len(data['inst'])} 檔），不寫入快取，稍後可重抓")
+        return data
+    CHIP_DIR.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as fh:
+        json.dump(data, fh, ensure_ascii=False)
+    return data
+
+
 def market_cache_path(iso_date):
     return MARKET_DIR / f"{iso_date}.json"
 
@@ -360,6 +532,26 @@ def build_series(dates):
 # ---------------------------------------------------------------------------
 # 訊號判定與價位計算
 # ---------------------------------------------------------------------------
+def chip_fields(sid, margin, inst_days):
+    """組出籌碼欄位。任一項資料缺失就標 None，**不以 0 頂替**。
+
+    inst_days 為近 N 日的 {id: 淨買賣超股數} 由舊到新，缺該日資料者略過該日
+    （而非當成 0），並回報實際採計天數，避免把「沒資料」讀成「法人沒動作」。
+    """
+    m = (margin or {}).get(sid) or {}
+    mb, ml, sb = m.get("margin"), m.get("limit"), m.get("short")
+    used = (mb / ml * 100) if (mb and ml) else None
+    ratio = (sb / mb * 100) if (mb and sb is not None) else None
+    vals = [d[sid] for d in inst_days if sid in d and d[sid] is not None]
+    return {
+        "margin_lots": round(mb) if mb is not None else None,
+        "margin_used_pct": round(used, 2) if used is not None else None,
+        "short_margin_pct": round(ratio, 2) if ratio is not None else None,
+        "inst_net_lots": round(sum(vals) / 1000) if vals else None,
+        "inst_days": len(vals),
+    }
+
+
 def evaluate(rows):
     """對單一個股的日 K 序列（升冪，最後一根為判定日）計算訊號與價位。
 
@@ -385,13 +577,31 @@ def evaluate(rows):
     avg_lots = avg_vol / 1000
     vwap = (cur["amount"] / cur["vol"]) if (cur["amount"] and cur["vol"]) else None
 
-    hit = (
+    # --- 漲停鎖死判定（紅點）---
+    lim = limit_up_price(prev["close"])
+    at_limit = bool(lim and abs(cur["close"] - lim) < PRICE_EPS)
+    close_is_high = (cur["high"] is not None
+                     and abs(cur["close"] - cur["high"]) < PRICE_EPS)
+    lock_ratio = (vwap / lim) if (vwap and lim) else None
+    red = bool(
+        at_limit and close_is_high
+        and lock_ratio is not None and lock_ratio >= RED_MIN_VWAP_RATIO
+        and vol_ratio >= RED_MIN_VOL_RATIO
+        and avg_lots >= RED_MIN_AVG_LOTS
+        and cur["close"] >= RED_MIN_CLOSE
+    )
+
+    # --- 出量突破（藍點）---
+    # 收在漲停者排除：當天買不到，列進波段名單只會給出無法執行的進場價。
+    blue = (
         cur["close"] > prior_high
         and vol_ratio >= VOL_MULT
         and change_pct >= MIN_CHANGE_PCT
         and avg_lots >= MIN_AVG_LOTS
         and cur["close"] >= MIN_CLOSE
+        and not at_limit
     )
+    hit = blue
 
     # wilder_atr 回傳與輸入等長的 list（暖身期為 NaN），取最後一根為當日 ATR。
     # 高低價缺漏者以收盤價補，避免整檔因單日缺值而算不出 ATR。
@@ -441,7 +651,9 @@ def evaluate(rows):
 
     return {
         "id": cur["id"], "name": cur["name"], "market": cur["market"],
-        "date": cur["date"], "hit": hit,
+        "date": cur["date"], "hit": hit, "blue": blue, "red": red,
+        "limit_up": lim, "at_limit": at_limit, "close_is_high": close_is_high,
+        "lock_ratio": round(lock_ratio, 4) if lock_ratio else None,
         "close": cur["close"], "open": cur["open"],
         "high": cur["high"], "low": cur["low"],
         "prev_close": prev["close"], "change_pct": round(change_pct, 2),
@@ -459,7 +671,10 @@ def evaluate(rows):
 
 
 def scan(target=None):
-    """回傳 (判定日, 命中清單依量能倍數排序, 掃描檔數)。"""
+    """回傳 (判定日, 藍點清單, 紅點清單, 掃描檔數)。
+
+    藍點依量能倍數排序、紅點依鎖死程度（均價/漲停價）排序。
+    """
     dates = cached_dates()
     if not dates:
         raise SystemExit("尚無全市場快取，請先執行：python breakout_scan.py backfill 90")
@@ -469,29 +684,62 @@ def scan(target=None):
         dates = [d for d in dates if d <= target]
     day = dates[-1]
     series = build_series(dates[-(MIN_BARS + 10):])
-    hits, scanned = [], 0
+
+    chip_today = load_chip_day(day, fetch=False)
+    margin = chip_today.get("margin") or {}
+    inst_days = [load_chip_day(d, fetch=False).get("inst") or {}
+                 for d in dates[-VOL_BASE_DAYS:]]
+
+    blues, reds, scanned = [], [], 0
     for rows in series.values():
         if rows[-1]["date"] != day:  # 當日無成交者不判定
             continue
         scanned += 1
         r = evaluate(rows)
-        if r and r["hit"]:
-            hits.append(r)
-    hits.sort(key=lambda x: x["vol_ratio"], reverse=True)
-    return day, hits, scanned
+        if not r or not (r["blue"] or r["red"]):
+            continue
+        r["chips"] = chip_fields(r["id"], margin, inst_days)
+        (blues if r["blue"] else reds).append(r)
+    blues.sort(key=lambda x: x["vol_ratio"], reverse=True)
+    reds.sort(key=lambda x: ((x["lock_ratio"] or 0), x["vol_ratio"]), reverse=True)
+    return day, blues, reds, scanned
+
+
+def _chip_line(c):
+    if not c:
+        return "   籌碼：資料不足"
+    def f(v, unit=""):
+        return "—" if v is None else f"{v}{unit}"
+    return (f"   融資使用率 {f(c['margin_used_pct'], '%')}　"
+            f"券資比 {f(c['short_margin_pct'], '%')}　"
+            f"{c['inst_days']}日法人合計 {f(c['inst_net_lots'], ' 張')}")
 
 
 def cmd_scan(target=None):
-    day, hits, scanned = scan(target)
+    day, blues, reds, scanned = scan(target)
     print(f"出量突破掃描（規則 {RULES_VERSION}）  判定日：{day}")
-    print(f"規則：收盤 > 前{BREAKOUT_LOOKBACK}日最高收盤　且　"
+    print(f"掃描 {scanned} 檔普通股　→　🔴紅點 {len(reds)} 檔　🔵藍點 {len(blues)} 檔\n")
+
+    print(f"🔴 紅點（漲停鎖死，隔日衝候選）：收盤=漲停價　且　收盤=最高　且　"
+          f"均價/漲停 >= {RED_MIN_VWAP_RATIO}　且　前{VOL_BASE_DAYS}日均量 >= "
+          f"{RED_MIN_AVG_LOTS}張\n")
+    for r in reds:
+        print(f"■ {r['id']} {r['name']}  {r['market']}  {r['group']}")
+        print(f"   收盤 {r['close']}（漲停價 {r['limit_up']}）　漲幅 {r['change_pct']:+.2f}%　"
+              f"均價 {r['vwap']}　鎖死度 {r['lock_ratio']:.3f}")
+        print(f"   成交 {r['lots']:,} 張（{r['amount_yi']} 億）　量能 {r['vol_ratio']}x")
+        print(_chip_line(r.get("chips")))
+        print()
+    if not reds:
+        print("（今日無漲停鎖死標的）\n")
+
+    print(f"🔵 藍點（出量突破，波段候選）：收盤 > 前{BREAKOUT_LOOKBACK}日最高收盤　且　"
           f"量 >= 前{VOL_BASE_DAYS}日均量×{VOL_MULT}　且　漲幅 >= {MIN_CHANGE_PCT}%　且　"
-          f"前{VOL_BASE_DAYS}日均量 >= {MIN_AVG_LOTS}張　且　收盤 >= {MIN_CLOSE}元")
-    print(f"掃描 {scanned} 檔普通股，命中 {len(hits)} 檔\n")
-    if not hits:
+          f"前{VOL_BASE_DAYS}日均量 >= {MIN_AVG_LOTS}張　且　未收在漲停\n")
+    if not blues:
         print("（今日無標的符合全部條件）")
         return
-    for r in hits:
+    for r in blues:
         lv = r["levels"] or {}
         print(f"■ {r['id']} {r['name']}  {r['market']}  {r['group']}")
         print(f"   收盤 {r['close']}　漲幅 {r['change_pct']:+.2f}%　均價 {r['vwap']}　"
@@ -508,11 +756,12 @@ def cmd_scan(target=None):
               f"R/R {lv.get('rr_chase')}")
         print(f"   回測承接 {lv.get('pullback_lo')}~{lv.get('pullback_hi')} → "
               f"目標 {lv.get('pullback_target')}　R/R {lv.get('rr_pullback')}")
+        print(_chip_line(r.get("chips")))
         print()
 
 
 def cmd_export(target=None):
-    day, hits, scanned = scan(target)
+    day, blues, reds, scanned = scan(target)
     payload = {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "trade_date": day,
@@ -522,19 +771,40 @@ def cmd_export(target=None):
             "breakout_lookback": BREAKOUT_LOOKBACK, "vol_mult": VOL_MULT,
             "vol_base_days": VOL_BASE_DAYS, "min_change_pct": MIN_CHANGE_PCT,
             "min_avg_lots": MIN_AVG_LOTS, "min_close": MIN_CLOSE, "atr_n": ATR_N,
+            "red_min_vwap_ratio": RED_MIN_VWAP_RATIO,
+            "red_min_avg_lots": RED_MIN_AVG_LOTS, "red_min_close": RED_MIN_CLOSE,
+            "red_min_vol_ratio": RED_MIN_VOL_RATIO,
         },
         "limitations": [
             "日終資料，非盤中即時；訊號於收盤後成立，最快次日開盤才能進場。",
-            "無逐筆成交明細（tick），故無大單買超、買賣成交比、大單區間等欄位。",
+            "無逐筆成交明細（tick），故無大單買超、買賣成交比、大單區間等欄位；"
+            "隔日沖的盤中進出場訊號（大單翻綠、跌破大單均價）本工具無法提供。",
+            "紅點的「鎖死度」是以當日均價÷漲停價推估，非確認全日未打開。",
             "規則門檻為初始設定值，尚未經回測校準，不等於已驗證的勝率。",
         ],
-        "items": hits,
+        "items": blues,
+        "red_items": reds,
     }
     out = export_path()
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8") as fh:
         json.dump(payload, fh, ensure_ascii=False, indent=1)
-    print(f"已輸出 {len(hits)} 檔 -> {out}")
+    print(f"已輸出 紅點 {len(reds)} 檔 / 藍點 {len(blues)} 檔 -> {out}")
+
+
+def cmd_chips(days="8"):
+    """補齊近 N 個交易日的全市場籌碼快取（融資融券＋三大法人）。
+
+    只需最近幾日：融資券取判定日當天，法人取近 5 日合計。
+    """
+    n = int(days)
+    todo = [d for d in cached_dates()[-n:] if not chip_cache_path(d).exists()]
+    print(f"待抓取 {len(todo)} 天籌碼（已快取者已略過）")
+    for i, d in enumerate(todo, 1):
+        c = load_chip_day(d)
+        print(f"[{i}/{len(todo)}] {d} -> 融資券 {len(c['margin'])} 檔、"
+              f"法人 {len(c['inst'])} 檔")
+        time.sleep(0.4)
 
 
 def cmd_prune(keep="70"):
@@ -548,7 +818,15 @@ def cmd_prune(keep="70"):
     dates = cached_dates()
     for d in dates[:-k]:
         market_cache_path(d).unlink()
-    print(f"保留最近 {min(k, len(dates))} 日，刪除 {max(0, len(dates) - k)} 個過舊快取")
+    # 籌碼只用到最近數日，保留期可短得多
+    chip_keep = set(dates[-VOL_BASE_DAYS * 3:])
+    n_chip = 0
+    for p in sorted(CHIP_DIR.glob("*.json")) if CHIP_DIR.exists() else []:
+        if p.stem not in chip_keep:
+            p.unlink()
+            n_chip += 1
+    print(f"保留最近 {min(k, len(dates))} 日行情，刪除 {max(0, len(dates) - k)} 個過舊行情快取、"
+          f"{n_chip} 個過舊籌碼快取")
 
 
 def main(argv):
@@ -560,6 +838,8 @@ def main(argv):
         cmd_scan(*args)
     elif cmd == "export":
         cmd_export(*args)
+    elif cmd == "chips":
+        cmd_chips(*args)
     elif cmd == "prune":
         cmd_prune(*args)
     else:

@@ -30,10 +30,17 @@
   }
   header {
     background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-    color: #fff; padding: 16px 16px 18px; position: sticky; top: 0; z-index: 5;
+    color: #fff; padding: 16px 16px 0; position: sticky; top: 0; z-index: 5;
   }
   header h1 { margin: 0 0 3px; font-size: 1.1rem; }
   header .meta { font-size: 0.72rem; opacity: 0.88; line-height: 1.5; }
+  .tabs { display: flex; gap: 6px; margin-top: 12px; }
+  .tabs button {
+    flex: 1; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    padding: 10px 8px; border-radius: 10px 10px 0 0;
+    background: rgba(255,255,255,.18); color: #fff;
+  }
+  .tabs button[aria-selected="true"] { background: var(--page-bg); color: var(--text); }
   .wrap { max-width: 620px; margin: 0 auto; padding: 12px; }
   .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
   .bar input, .bar select {
@@ -47,11 +54,12 @@
     background: var(--card-bg); border-radius: 14px; padding: 14px;
     margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
   }
+  .card.red { border-left: 4px solid var(--red); }
+  .card.blue { border-left: 4px solid var(--blue); }
   .card h2 {
     margin: 0 0 4px; font-size: 1.05rem; display: flex; align-items: baseline;
     gap: 6px; flex-wrap: wrap;
   }
-  .arrow { color: var(--red); }
   .tags { font-size: 0.68rem; color: var(--text-dim); margin-bottom: 10px; }
   .tag {
     display: inline-block; background: var(--chip); border-radius: 5px;
@@ -61,10 +69,11 @@
   .sec.quote { background: #fdf2f2; }
   .sec.play  { background: #f1f6fd; }
   .sec.vol   { background: #f2f7f3; }
+  .sec.chips { background: #f7f5fb; }
   .sec h3 { margin: 0 0 6px; font-size: 0.78rem; color: var(--text-dim); font-weight: 600; }
-  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; gap: 10px; }
   .row .k { font-size: 0.8rem; color: var(--text-dim); }
-  .row .v { font-size: 0.92rem; font-weight: 600; }
+  .row .v { font-size: 0.92rem; font-weight: 600; text-align: right; }
   .v.big { font-size: 1.5rem; color: var(--red); }
   .v.red { color: var(--red); } .v.green { color: var(--green); } .v.blue { color: var(--blue); }
   .note { font-size: 0.68rem; color: var(--text-dim); margin-top: 5px; line-height: 1.5; }
@@ -75,14 +84,15 @@
   details.info code { background: var(--chip); padding: 1px 4px; border-radius: 4px; }
   .warn { border-left: 3px solid #d97706; padding-left: 9px; }
   footer { text-align: center; font-size: 0.68rem; color: var(--text-dim); padding: 16px; line-height: 1.7; }
-  .empty { text-align: center; color: var(--text-dim); padding: 36px 12px; font-size: 0.88rem; }
+  .empty { text-align: center; color: var(--text-dim); padding: 36px 12px; font-size: 0.88rem; line-height: 1.7; }
 
   @media (prefers-color-scheme: dark) {
     :root {
       --page-bg: #101613; --card-bg: #18211d; --text: #e6ede9; --text-dim: #93a49c;
       --border: #2a3630; --chip: #212c27; --red: #ff6b63; --green: #4ade80; --blue: #7aa7ff;
     }
-    .sec.quote { background: #24191a; } .sec.play { background: #171f2b; } .sec.vol { background: #182219; }
+    .sec.quote { background: #24191a; } .sec.play { background: #171f2b; }
+    .sec.vol { background: #182219; } .sec.chips { background: #1e1b26; }
     details.info { background: var(--card-bg); }
     .bar input, .bar select { background: var(--card-bg); }
   }
@@ -90,34 +100,43 @@
 </head>
 <body>
 <header>
-  <h1>⬆️ 出量突破掃描</h1>
+  <h1>出量突破掃描</h1>
   <div class="meta" id="meta">載入中…</div>
+  <div class="tabs" role="tablist">
+    <button id="tab-red" role="tab" aria-selected="false">🔴 紅點</button>
+    <button id="tab-blue" role="tab" aria-selected="true">🔵 藍點</button>
+  </div>
 </header>
 
 <div class="wrap">
   <details class="info">
     <summary>這是什麼？規則與限制（務必先讀）</summary>
     <p class="warn"><b>日終資料，非盤中即時。</b>訊號在收盤後才成立，最快隔日開盤才能進場。
-      本工具<b>沒有</b>逐筆成交明細（tick），因此<b>不提供</b>「25張大單買超」「買賣成交比」
-      「大單區間」這類欄位——那需要券商 API。本工具不重製任何第三方服務的私有演算法。</p>
-    <p><b>命中條件（全部須同時成立）：</b></p>
-    <ul id="rules"></ul>
+      本工具<b>沒有</b>逐筆成交明細（tick），因此<b>不提供</b>「25 張大單買超」「買賣成交比」
+      「大單區間」，也<b>無法</b>給隔日沖的盤中進出場訊號（大單翻綠、跌破大單均價）——
+      那些都需要券商 API。本工具不重製任何第三方服務的私有演算法。</p>
+
+    <p><b>🔴 紅點（漲停鎖死 → 隔日衝候選）</b></p>
+    <ul id="rules-red"></ul>
+    <p>「鎖死度」= 當日均價 ÷ 漲停價。均價越貼近漲停，代表整天成交幾乎都在漲停價附近、
+      盤中少有打開。<b>這是推估，不等於確認全日未打開</b>。</p>
+
+    <p><b>🔵 藍點（出量突破 → 波段候選）</b></p>
+    <ul id="rules-blue"></ul>
     <p><b>價位計算依據：</b>突破確認線 = 前 20 日最高收盤；箱高 = 突破確認線 − 前 20 日最低價；
       防守 = 突破確認線 − 0.5×ATR(14)；目標1 = 突破確認線 + 0.5×箱高；目標2 = 突破確認線 + 1×箱高
       （量測滿足點）。R/R =（下一個仍在進場價上方的目標 − 進場價）÷（進場價 − 防守價）。</p>
+
     <p><b>誠實揭露：</b>上述門檻為初始設定值，<b>尚未經回測校準</b>，不等於已驗證的勝率。
-      漲停鎖死的個股收盤常已越過目標1，其「追價 R/R」會很差——那是真實資訊，不是計算錯誤。</p>
-    <p>資料源：TWSE <code>MI_INDEX</code>、TPEx <code>afterTrading/otc</code>（皆為官方公開端點）。</p>
+      融資券資料的發布時間晚於收盤行情，當日盤後較早查詢時會顯示「—」，屬正常。</p>
+    <p>資料來源（皆為官方公開端點，各 1 次請求涵蓋全市場）：TWSE <code>MI_INDEX</code>／
+      <code>MI_MARGN</code>／<code>T86</code>，TPEx <code>afterTrading/otc</code>／
+      <code>margin/balance</code>／<code>insti/dailyTrade</code>。</p>
   </details>
 
   <div class="bar">
     <input id="q" type="search" placeholder="搜尋代號 / 名稱 / 產業">
-    <select id="sort">
-      <option value="vol_ratio">依量能倍數</option>
-      <option value="change_pct">依漲幅</option>
-      <option value="rr_pullback">依回測 R/R</option>
-      <option value="amount_yi">依成交金額</option>
-    </select>
+    <select id="sort"></select>
     <span class="count" id="count"></span>
   </div>
 
@@ -129,67 +148,120 @@
 <script>
 const $ = (id) => document.getElementById(id);
 let DATA = null;
+let MODE = "blue";
 
 const fmt = (n, d = 2) =>
   (n === null || n === undefined || Number.isNaN(n)) ? "—" : Number(n).toFixed(d);
 const int = (n) =>
   (n === null || n === undefined) ? "—" : Number(n).toLocaleString("en-US");
+const pct = (n) => (n === null || n === undefined) ? "—" : Number(n).toFixed(2) + "%";
 
-function ruleText(r) {
+const SORTS = {
+  blue: [["vol_ratio", "依量能倍數"], ["change_pct", "依漲幅"],
+         ["rr_pullback", "依回測 R/R"], ["amount_yi", "依成交金額"]],
+  red: [["lock_ratio", "依鎖死度"], ["vol_ratio", "依量能倍數"],
+        ["amount_yi", "依成交金額"], ["inst_net_lots", "依法人買超"]],
+};
+
+function rulesRed(r) {
+  return [
+    "收盤價 = 漲停價（由前一日收盤 ×1.1 取整至合法檔位）",
+    "收盤價 = 當日最高價（尾盤未鬆動）",
+    `鎖死度（均價 ÷ 漲停價）≥ ${r.red_min_vwap_ratio}`,
+    `當日量 ≥ 前 ${r.vol_base_days} 日均量 × ${r.red_min_vol_ratio}（排除量縮惜售型漲停）`,
+    `前 ${r.vol_base_days} 日均量 ≥ ${int(r.red_min_avg_lots)} 張、收盤價 ≥ ${r.red_min_close} 元`,
+  ];
+}
+function rulesBlue(r) {
   return [
     `收盤價 > 前 ${r.breakout_lookback} 日最高收盤（突破）`,
     `當日成交量 ≥ 前 ${r.vol_base_days} 日均量 × ${r.vol_mult}（出量）`,
     `當日漲幅 ≥ ${r.min_change_pct}%`,
-    `前 ${r.vol_base_days} 日均量 ≥ ${int(r.min_avg_lots)} 張（流動性）`,
-    `收盤價 ≥ ${r.min_close} 元`,
+    `前 ${r.vol_base_days} 日均量 ≥ ${int(r.min_avg_lots)} 張、收盤價 ≥ ${r.min_close} 元`,
+    "未收在漲停（收漲停者當天買不到，改列紅點）",
   ];
 }
 
-function card(it) {
-  const lv = it.levels || {};
-  const up = it.change_pct >= 0;
-  const reached = (lv.targets_reached || []).length
-    ? `<div class="note">※ 收盤已達目標：${lv.targets_reached.join("、")}</div>` : "";
+function chipSec(c) {
+  if (!c) return "";
   return `
-  <div class="card">
-    <h2><span class="arrow">⬆️</span>${it.id} ${it.name}</h2>
-    <div class="tags">
-      <span class="tag">${it.market}</span>
-      ${it.group ? `<span class="tag">${it.group}</span>` : ""}
-      <span class="tag">${it.date}</span>
-    </div>
+    <div class="sec chips">
+      <h3>📝 籌碼</h3>
+      <div class="row"><span class="k">融資使用率</span><span class="v">${pct(c.margin_used_pct)}</span></div>
+      <div class="row"><span class="k">券資比</span><span class="v">${pct(c.short_margin_pct)}</span></div>
+      <div class="row"><span class="k">融資餘額</span><span class="v">${int(c.margin_lots)} 張</span></div>
+      <div class="row"><span class="k">${c.inst_days} 日法人合計</span>
+        <span class="v ${(c.inst_net_lots ?? 0) >= 0 ? "red" : "green"}">${int(c.inst_net_lots)} 張</span></div>
+      <div class="note">三大法人買賣超取官方彙總欄位，非券商分點「主力」，兩者定義不同。
+        融資券未發布時顯示「—」。</div>
+    </div>`;
+}
 
+function quoteSec(it, extra = "") {
+  const up = it.change_pct >= 0;
+  return `
     <div class="sec quote">
       <h3>📊 行情資訊（日終）</h3>
       <div class="row"><span class="k">收盤價</span><span class="v big">${fmt(it.close)}</span></div>
       <div class="row"><span class="k">漲跌幅</span>
         <span class="v ${up ? "red" : "green"}">${up ? "+" : ""}${fmt(it.change_pct)}%</span></div>
       <div class="row"><span class="k">當日均價</span><span class="v">${fmt(it.vwap)}</span></div>
-      <div class="row"><span class="k">收盤 vs 均價</span>
-        <span class="v ${it.above_vwap ? "red" : "green"}">
-          ${it.above_vwap ? "收盤 > 均價（尾盤偏強）" : "收盤 < 均價（尾盤偏弱）"}</span></div>
+      ${extra}
       <div class="note">當日均價 = 成交金額 ÷ 成交股數（官方揭露值）</div>
-    </div>
+    </div>`;
+}
 
+function volSec(it, showAvg = true) {
+  return `
     <div class="sec vol">
       <h3>📊 量能統計</h3>
       <div class="row"><span class="k">成交量</span><span class="v">${int(it.lots)} 張</span></div>
       <div class="row"><span class="k">成交金額</span><span class="v">${fmt(it.amount_yi)} 億</span></div>
-      <div class="row"><span class="k">量能倍數</span>
-        <span class="v red">${fmt(it.vol_ratio)}x</span></div>
-      <div class="row"><span class="k">前 5 日均量</span><span class="v">${int(it.avg_lots)} 張</span></div>
+      <div class="row"><span class="k">量能倍數</span><span class="v red">${fmt(it.vol_ratio)}x</span></div>
+      ${showAvg ? `<div class="row"><span class="k">前 5 日均量</span><span class="v">${int(it.avg_lots)} 張</span></div>` : ""}
       <div class="note">無逐筆明細，故不提供大單買超／買賣成交比／大單區間。</div>
-    </div>
+    </div>`;
+}
 
+function head(it, dot) {
+  return `
+    <h2>${dot} ${it.id} ${it.name}</h2>
+    <div class="tags">
+      <span class="tag">${it.market}</span>
+      ${it.group ? `<span class="tag">${it.group}</span>` : ""}
+      <span class="tag">${it.date}</span>
+    </div>`;
+}
+
+function redCard(it) {
+  const lock = `
+      <div class="row"><span class="k">漲停價</span><span class="v red">${fmt(it.limit_up)}</span></div>
+      <div class="row"><span class="k">鎖死度（均價÷漲停）</span>
+        <span class="v red">${fmt(it.lock_ratio, 3)}</span></div>`;
+  return `<div class="card red">${head(it, "🔴")}
+    ${quoteSec(it, lock)}${volSec(it, false)}${chipSec(it.chips)}
+    <div class="note">紅點只標示「昨日收盤鎖漲停」的候選名單。隔日沖的進場時機與
+      出場條件（賣壓宣洩後的拉回、大單翻綠、跌破大單均價）需要盤中逐筆資料，
+      本工具無法提供，請自行看盤判斷。</div>
+  </div>`;
+}
+
+function blueCard(it) {
+  const lv = it.levels || {};
+  const reached = (lv.targets_reached || []).length
+    ? `<div class="note">※ 收盤已達目標：${lv.targets_reached.join("、")}</div>` : "";
+  const vw = `<div class="row"><span class="k">收盤 vs 均價</span>
+        <span class="v ${it.above_vwap ? "red" : "green"}">
+          ${it.above_vwap ? "收盤 > 均價（尾盤偏強）" : "收盤 < 均價（尾盤偏弱）"}</span></div>`;
+  return `<div class="card blue">${head(it, "🔵")}
+    ${quoteSec(it, vw)}${volSec(it)}
     <div class="sec play">
       <h3>🎯 交易劇本（本專案模型計算）</h3>
-      <div class="row"><span class="k">突破確認線</span>
-        <span class="v blue">${fmt(lv.breakout_line)}</span></div>
+      <div class="row"><span class="k">突破確認線</span><span class="v blue">${fmt(lv.breakout_line)}</span></div>
       <div class="row"><span class="k">箱底 / 箱高</span>
         <span class="v">${fmt(it.prior_low)} / ${fmt(it.prior_high - it.prior_low)}</span></div>
       <div class="row"><span class="k">ATR(14)</span><span class="v">${fmt(lv.atr)}</span></div>
-      <div class="row"><span class="k">防守／型態失效</span>
-        <span class="v green">${fmt(lv.stop)}</span></div>
+      <div class="row"><span class="k">防守／型態失效</span><span class="v green">${fmt(lv.stop)}</span></div>
       <div class="row"><span class="k">目標1 / 目標2</span>
         <span class="v red">${fmt(lv.target1)} / ${fmt(lv.target2)}</span></div>
       ${reached}
@@ -199,38 +271,60 @@ function card(it) {
         <span class="v ${(lv.rr_pullback ?? 0) >= 1.5 ? "red" : ""}">R/R ${fmt(lv.rr_pullback)}</span></div>
       <div class="note">價位皆由前 20 日高低、箱體量測與 ATR 推導，可重算；非投資建議。</div>
     </div>
+    ${chipSec(it.chips)}
   </div>`;
+}
+
+function sortValue(it, key) {
+  if (key === "rr_pullback") return it.levels?.rr_pullback ?? -99;
+  if (key === "inst_net_lots") return it.chips?.inst_net_lots ?? -1e12;
+  return it[key] ?? -1e12;
 }
 
 function render() {
   if (!DATA) return;
+  const all = MODE === "red" ? (DATA.red_items || []) : (DATA.items || []);
   const q = $("q").value.trim().toLowerCase();
   const key = $("sort").value;
-  let items = DATA.items.filter((it) =>
-    !q || `${it.id} ${it.name} ${it.group}`.toLowerCase().includes(q));
-  items = items.slice().sort((a, b) => {
-    const get = (x) => (key === "rr_pullback" ? (x.levels?.rr_pullback ?? -99) : (x[key] ?? -99));
-    return get(b) - get(a);
-  });
-  $("count").textContent = `${items.length} / ${DATA.items.length} 檔`;
+  const items = all
+    .filter((it) => !q || `${it.id} ${it.name} ${it.group}`.toLowerCase().includes(q))
+    .slice()
+    .sort((a, b) => sortValue(b, key) - sortValue(a, key));
+  $("count").textContent = `${items.length} / ${all.length} 檔`;
+  const card = MODE === "red" ? redCard : blueCard;
   $("list").innerHTML = items.length
     ? items.map(card).join("")
-    : `<div class="empty">沒有符合的標的。<br>今日全市場掃描 ${int(DATA.scanned)} 檔普通股，
-       無標的同時符合全部條件是正常結果——盤整期可能連續多日掛零。</div>`;
+    : `<div class="empty">沒有符合的標的。<br>今日全市場掃描 ${int(DATA.scanned)} 檔普通股。<br>
+       ${MODE === "red" ? "沒有漲停鎖死的個股" : "沒有標的同時符合全部突破條件"}是正常結果——
+       盤整期可能連續多日掛零。</div>`;
+}
+
+function setMode(m) {
+  MODE = m;
+  $("tab-red").setAttribute("aria-selected", String(m === "red"));
+  $("tab-blue").setAttribute("aria-selected", String(m === "blue"));
+  $("sort").innerHTML = SORTS[m]
+    .map(([v, label]) => `<option value="${v}">${label}</option>`).join("");
+  render();
 }
 
 fetch("breakout_export.json", { cache: "no-store" })
   .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
   .then((d) => {
     DATA = d;
+    const nr = (d.red_items || []).length, nb = (d.items || []).length;
     $("meta").innerHTML =
-      `判定日 <b>${d.trade_date}</b>　·　全市場掃描 ${int(d.scanned)} 檔　·　命中 <b>${d.items.length}</b> 檔<br>` +
-      `規則版本 ${d.rules_version}　·　資料產生 ${(d.generated_at || "").replace("T", " ").slice(0, 16)}`;
-    $("rules").innerHTML = ruleText(d.rules).map((t) => `<li>${t}</li>`).join("");
+      `判定日 <b>${d.trade_date}</b>　·　全市場掃描 ${int(d.scanned)} 檔　·　` +
+      `🔴 <b>${nr}</b>　🔵 <b>${nb}</b><br>` +
+      `規則 ${d.rules_version}　·　資料產生 ${(d.generated_at || "").replace("T", " ").slice(0, 16)}`;
+    $("tab-red").textContent = `🔴 紅點 ${nr}`;
+    $("tab-blue").textContent = `🔵 藍點 ${nb}`;
+    $("rules-red").innerHTML = rulesRed(d.rules).map((t) => `<li>${t}</li>`).join("");
+    $("rules-blue").innerHTML = rulesBlue(d.rules).map((t) => `<li>${t}</li>`).join("");
     $("foot").innerHTML =
-      (d.limitations || []).map((t) => `${t}`).join("<br>") +
+      (d.limitations || []).join("<br>") +
       "<br><br>本頁為規則式量化模型與公開市場資料所產生的研究性預測；預測可能失效。投資請自行評估風險。";
-    render();
+    setMode(nr > 0 ? "red" : "blue");
   })
   .catch((e) => {
     $("meta").textContent = "資料載入失敗：" + e.message;
@@ -240,6 +334,8 @@ fetch("breakout_export.json", { cache: "no-store" })
 
 $("q").addEventListener("input", render);
 $("sort").addEventListener("change", render);
+$("tab-red").addEventListener("click", () => setMode("red"));
+$("tab-blue").addEventListener("click", () => setMode("blue"));
 </script>
 </body>
 </html>
