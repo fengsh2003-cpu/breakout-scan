@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.fengsh2003_cpu.breakout",
+      "sha256_cert_fingerprints": [
+        "47:7F:1F:D9:47:BC:C2:31:6E:B2:CF:EB:5D:E7:D8:E1:5E:C9:53:DF:F7:2C:22:7A:8C:AC:5C:B1:14:8E:E6:92"
+      ]
+    }
+  }
+]
