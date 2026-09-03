@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-03T11:29:12+00:00",
+ "generated_at": "2026-09-03T13:09:12+00:00",
  "trade_date": "2026-09-03",
  "rules_version": "v1 (2026-09-02)",
  "scanned": 1950,
@@ -70,8 +70,8 @@
     "margin_lots": null,
     "margin_used_pct": null,
     "short_margin_pct": null,
-    "inst_net_lots": 412,
-    "inst_days": 4
+    "inst_net_lots": 596,
+    "inst_days": 5
    }
   },
   {
@@ -118,11 +118,11 @@
    },
    "group": "航運業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": -180,
-    "inst_days": 4
+    "margin_lots": 2404,
+    "margin_used_pct": 2.3,
+    "short_margin_pct": 0.12,
+    "inst_net_lots": 1742,
+    "inst_days": 5
    }
   },
   {
@@ -172,8 +172,8 @@
     "margin_lots": null,
     "margin_used_pct": null,
     "short_margin_pct": null,
-    "inst_net_lots": -386,
-    "inst_days": 4
+    "inst_net_lots": -689,
+    "inst_days": 5
    }
   },
   {
@@ -222,11 +222,11 @@
    },
    "group": "金融保險業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 13433,
-    "inst_days": 4
+    "margin_lots": 7461,
+    "margin_used_pct": 0.17,
+    "short_margin_pct": 3.67,
+    "inst_net_lots": 24321,
+    "inst_days": 5
    }
   }
  ],
