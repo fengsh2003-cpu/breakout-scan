@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-16T11:52:59+00:00",
+ "generated_at": "2026-09-16T13:56:21+00:00",
  "trade_date": "2026-09-16",
  "rules_version": "v1 (2026-09-02)",
  "scanned": 1957,
@@ -68,11 +68,11 @@
    },
    "group": "光電業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 526,
-    "inst_days": 4
+    "margin_lots": 5088,
+    "margin_used_pct": 20.27,
+    "short_margin_pct": 2.61,
+    "inst_net_lots": 1729,
+    "inst_days": 5
    }
   },
   {
@@ -119,11 +119,11 @@
    },
    "group": "化學工業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": -2951,
-    "inst_days": 4
+    "margin_lots": 32241,
+    "margin_used_pct": 27.04,
+    "short_margin_pct": 0.93,
+    "inst_net_lots": 1583,
+    "inst_days": 5
    }
   },
   {
@@ -170,11 +170,11 @@
    },
    "group": "電子零組件業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 60,
-    "inst_days": 4
+    "margin_lots": 794,
+    "margin_used_pct": 3.35,
+    "short_margin_pct": 3.02,
+    "inst_net_lots": 78,
+    "inst_days": 5
    }
   },
   {
@@ -221,11 +221,11 @@
    },
    "group": "半導體業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 287,
-    "inst_days": 4
+    "margin_lots": 4596,
+    "margin_used_pct": 38.96,
+    "short_margin_pct": 4.37,
+    "inst_net_lots": 621,
+    "inst_days": 5
    }
   }
  ]
