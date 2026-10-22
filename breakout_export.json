@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-22T12:11:50+00:00",
+ "generated_at": "2026-10-22T14:15:34+00:00",
  "trade_date": "2026-10-22",
  "rules_version": "v1 (2026-09-02)",
  "scanned": 1957,
@@ -67,11 +67,11 @@
    },
    "group": "鋼鐵工業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": -24,
-    "inst_days": 4
+    "margin_lots": 2462,
+    "margin_used_pct": 5.92,
+    "short_margin_pct": 2.27,
+    "inst_net_lots": 1190,
+    "inst_days": 5
    }
   },
   {
@@ -118,11 +118,11 @@
    },
    "group": "電機機械",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 1084,
-    "inst_days": 4
+    "margin_lots": 8527,
+    "margin_used_pct": 13.38,
+    "short_margin_pct": 7.41,
+    "inst_net_lots": 11454,
+    "inst_days": 5
    }
   },
   {
@@ -169,11 +169,11 @@
    },
    "group": "光電業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": -131,
-    "inst_days": 4
+    "margin_lots": 6214,
+    "margin_used_pct": 15.17,
+    "short_margin_pct": 11.81,
+    "inst_net_lots": -647,
+    "inst_days": 5
    }
   },
   {
@@ -220,11 +220,11 @@
    },
    "group": "資訊服務業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 32,
-    "inst_days": 4
+    "margin_lots": 1972,
+    "margin_used_pct": 8.85,
+    "short_margin_pct": 6.59,
+    "inst_net_lots": 913,
+    "inst_days": 5
    }
   },
   {
@@ -271,11 +271,11 @@
    },
    "group": "水泥工業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 18906,
-    "inst_days": 4
+    "margin_lots": 35698,
+    "margin_used_pct": 1.9,
+    "short_margin_pct": 0.77,
+    "inst_net_lots": 52265,
+    "inst_days": 5
    }
   },
   {
@@ -322,11 +322,11 @@
    },
    "group": "通信網路業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 613,
-    "inst_days": 4
+    "margin_lots": 1656,
+    "margin_used_pct": 10.04,
+    "short_margin_pct": 10.27,
+    "inst_net_lots": 65,
+    "inst_days": 5
    }
   }
  ],
@@ -377,11 +377,11 @@
    },
    "group": "資訊服務業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 75,
-    "inst_days": 4
+    "margin_lots": 13489,
+    "margin_used_pct": 53.92,
+    "short_margin_pct": 0.12,
+    "inst_net_lots": 80,
+    "inst_days": 5
    }
   },
   {
@@ -433,8 +433,8 @@
     "margin_lots": null,
     "margin_used_pct": null,
     "short_margin_pct": null,
-    "inst_net_lots": 57,
-    "inst_days": 4
+    "inst_net_lots": 251,
+    "inst_days": 5
    }
   },
   {
@@ -481,11 +481,11 @@
    },
    "group": "電腦及週邊設備業",
    "chips": {
-    "margin_lots": null,
-    "margin_used_pct": null,
-    "short_margin_pct": null,
-    "inst_net_lots": 647,
-    "inst_days": 4
+    "margin_lots": 5476,
+    "margin_used_pct": 31.77,
+    "short_margin_pct": 1.37,
+    "inst_net_lots": 3842,
+    "inst_days": 5
    }
   }
  ]
