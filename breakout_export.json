@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-18T21:29:27+00:00",
- "trade_date": "2026-11-18",
+ "generated_at": "2026-11-19T15:56:13+00:00",
+ "trade_date": "2026-11-19",
  "rules_version": "v1 (2026-09-02)",
- "scanned": 1969,
+ "scanned": 1974,
  "rules": {
   "breakout_lookback": 20,
   "vol_mult": 2.0,
@@ -23,57 +23,5 @@
   "規則門檻為初始設定值，尚未經回測校準，不等於已驗證的勝率。"
  ],
  "items": [],
- "red_items": [
-  {
-   "id": "3294",
-   "name": "英濟",
-   "market": "TPEx",
-   "date": "2026-11-18",
-   "hit": false,
-   "blue": false,
-   "red": true,
-   "limit_up": 25.1,
-   "at_limit": true,
-   "close_is_high": true,
-   "lock_ratio": 0.9943,
-   "close": 25.1,
-   "open": 25.1,
-   "high": 25.1,
-   "low": 24.15,
-   "prev_close": 22.85,
-   "change_pct": 9.85,
-   "vwap": 24.96,
-   "above_vwap": true,
-   "lots": 1726,
-   "avg_lots": 317,
-   "vol_ratio": 5.44,
-   "prior_high": 30.65,
-   "prior_low": 22.5,
-   "amount_yi": 0.43,
-   "levels": {
-    "breakout_line": 30.65,
-    "chase_entry": 25.1,
-    "pullback_lo": 30.65,
-    "pullback_hi": 31.08,
-    "pullback_mid": 30.86,
-    "stop": 29.94,
-    "target1": 34.72,
-    "target2": 38.8,
-    "targets_reached": [],
-    "chase_target": null,
-    "rr_chase": null,
-    "pullback_target": 34.72,
-    "rr_pullback": 4.2,
-    "atr": 1.43
-   },
-   "group": "電子零組件業",
-   "chips": {
-    "margin_lots": 5906,
-    "margin_used_pct": 17.9,
-    "short_margin_pct": 0.95,
-    "inst_net_lots": 295,
-    "inst_days": 5
-   }
-  }
- ]
+ "red_items": []
 }
