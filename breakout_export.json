@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-19T21:41:34+00:00",
- "trade_date": "2026-11-19",
+ "generated_at": "2026-11-20T15:40:14+00:00",
+ "trade_date": "2026-11-20",
  "rules_version": "v1 (2026-09-02)",
- "scanned": 1974,
+ "scanned": 1981,
  "rules": {
   "breakout_lookback": 20,
   "vol_mult": 2.0,
