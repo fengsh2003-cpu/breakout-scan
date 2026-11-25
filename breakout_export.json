@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-24T23:09:52+00:00",
- "trade_date": "2026-11-24",
+ "generated_at": "2026-11-25T17:28:36+00:00",
+ "trade_date": "2026-11-25",
  "rules_version": "v1 (2026-09-02)",
- "scanned": 0,
+ "scanned": 1964,
  "rules": {
   "breakout_lookback": 20,
   "vol_mult": 2.0,
@@ -22,6 +22,58 @@
   "紅點的「鎖死度」是以當日均價÷漲停價推估，非確認全日未打開。",
   "規則門檻為初始設定值，尚未經回測校準，不等於已驗證的勝率。"
  ],
- "items": [],
+ "items": [
+  {
+   "id": "6614",
+   "name": "資拓宏宇",
+   "market": "TWSE",
+   "date": "2026-11-25",
+   "hit": true,
+   "blue": true,
+   "red": false,
+   "limit_up": 49.2,
+   "at_limit": false,
+   "close_is_high": true,
+   "lock_ratio": 0.9192,
+   "close": 46.8,
+   "open": 42.5,
+   "high": 46.8,
+   "low": 42.5,
+   "prev_close": 44.75,
+   "change_pct": 4.58,
+   "vwap": 45.23,
+   "above_vwap": true,
+   "lots": 6831,
+   "avg_lots": 2706,
+   "vol_ratio": 2.52,
+   "prior_high": 44.75,
+   "prior_low": 31.15,
+   "amount_yi": 3.09,
+   "levels": {
+    "breakout_line": 44.75,
+    "chase_entry": 46.8,
+    "pullback_lo": 44.75,
+    "pullback_hi": 45.56,
+    "pullback_mid": 45.16,
+    "stop": 43.4,
+    "target1": 51.55,
+    "target2": 58.35,
+    "targets_reached": [],
+    "chase_target": 51.55,
+    "rr_chase": 1.4,
+    "pullback_target": 51.55,
+    "rr_pullback": 3.63,
+    "atr": 2.7
+   },
+   "group": "數位雲端",
+   "chips": {
+    "margin_lots": 905,
+    "margin_used_pct": 4.49,
+    "short_margin_pct": 3.09,
+    "inst_net_lots": 267,
+    "inst_days": 5
+   }
+  }
+ ],
  "red_items": []
 }
